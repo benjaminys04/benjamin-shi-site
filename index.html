@@ -20,19 +20,28 @@
     a { color: #222; text-decoration: underline; text-underline-offset: 3px; }
     a:hover { color: #888; }
     .motto {
+      position: relative;
       font-style: italic;
       cursor: default;
-      transition: opacity 0.4s ease;
       margin: 0 0 0.8em 0;
+      display: inline-block;
     }
-    .motto::before {
-      content: attr(data-latin);
+    .motto .latin,
+    .motto .english {
+      transition: opacity 0.8s ease;
     }
-    .motto:hover::before {
-      content: attr(data-english);
+    .motto .english {
+      position: absolute;
+      top: 0;
+      left: 0;
+      opacity: 0;
+      white-space: nowrap;
     }
-    .motto em {
-      display: none;
+    .motto:hover .latin {
+      opacity: 0;
+    }
+    .motto:hover .english {
+      opacity: 1;
     }
     .links { margin: 0 0 0.8em 0; }
     .section { margin-top: 1.2em; }
@@ -51,7 +60,10 @@
 <body>
   <h1>Benjamin Shi <a href="https://www.youtube.com/watch?v=g8DBd3SkuS8" class="secret">✹</a></h1>
 
-  <p class="motto" data-latin="laudem non quaero; culpam non timeo" data-english="i seek not praise; i fear not blame"><em>laudem non quaero; culpam non timeo</em></p>
+  <p class="motto">
+    <span class="latin">laudem non quaero; culpam non timeo</span>
+    <span class="english">i seek not praise; i fear not blame</span>
+  </p>
 
   <p>i love <a href="https://en.wikipedia.org/wiki/Garamond">garamond</a>.</p>
 
