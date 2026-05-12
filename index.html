@@ -19,6 +19,21 @@
     h1 { font-weight: 500; font-size: 2em; margin-bottom: 0.2em; }
     a { color: #222; text-decoration: underline; text-underline-offset: 3px; }
     a:hover { color: #888; }
+    .motto {
+      font-style: italic;
+      cursor: default;
+      transition: opacity 0.4s ease;
+      margin: 0 0 0.8em 0;
+    }
+    .motto::before {
+      content: attr(data-latin);
+    }
+    .motto:hover::before {
+      content: attr(data-english);
+    }
+    .motto em {
+      display: none;
+    }
     .links { margin: 0 0 0.8em 0; }
     .section { margin-top: 1.2em; }
     .section p { margin: 0 0 0.7em 0; }
@@ -36,6 +51,8 @@
 <body>
   <h1>Benjamin Shi <a href="https://www.youtube.com/watch?v=g8DBd3SkuS8" class="secret">✹</a></h1>
 
+  <p class="motto" data-latin="laudem non quaero; culpam non timeo" data-english="i seek not praise; i fear not blame"><em>laudem non quaero; culpam non timeo</em></p>
+
   <p>i love <a href="https://en.wikipedia.org/wiki/Garamond">garamond</a>.</p>
 
   <div class="links">
@@ -47,16 +64,16 @@
   <div class="section">
     <p>currently reading:</p>
     <ul>
-      <li><em>demons</em> — fyodor dostoevsky</li>
-      <li><em>common good constitutionalism</em> — adrian vermeule</li>
-      <li><em>emergent tokyo</em> — joe mcreynolds and jorge almazán</li>
-      <li><em>pieces of the action</em> — vannevar bush</li>
-      <li><em>future men</em> — douglas wilson</li>
       <li><em>china</em> — edward rutherfurd</li>
-      <li><em>the art of doing science and engineering</em> — richard hamming</li>
-      <li><em>sermons</em> — theodorus jacobus frelinghuysen</li>
-      <li><em>the world for sale</em> — javier blas and jack farchy</li>
+      <li><em>demons</em> — fyodor dostoevsky</li>
+      <li><em>future men</em> — douglas wilson</li>
       <li><em>the storm of steel</em> — ernst jünger</li>
+      <li><em>pieces of the action</em> — vannevar bush</li>
+      <li><em>the world for sale</em> — javier blas and jack farchy</li>
+      <li><em>sermons</em> — theodorus jacobus frelinghuysen</li>
+      <li><em>emergent tokyo</em> — joe mcreynolds and jorge almazán</li>
+      <li><em>common good constitutionalism</em> — adrian vermeule</li>
+      <li><em>the art of doing science and engineering</em> — richard hamming</li>
     </ul>
   </div>
 
