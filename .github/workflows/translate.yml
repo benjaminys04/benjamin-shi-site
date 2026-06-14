@@ -1,0 +1,51 @@
+name: Translate pages
+
+# Whenever the canonical English page changes on main, regenerate the
+# Chinese (/ch), Greek (/gr), Latin (/lt) and Hebrew (/hb) copies with Claude
+# and commit them. The commit only touches the translated folders, never
+# index.html, so it does not re-trigger this workflow (no loop). Cloudflare
+# redeploys all pages on the resulting commit.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "index.html"
+      - "scripts/translate.mjs"
+      - ".github/workflows/translate.yml"
+  workflow_dispatch: {}
+
+# Avoid overlapping runs racing to commit.
+concurrency:
+  group: translate-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  translate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Regenerate translations
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: node scripts/translate.mjs
+
+      - name: Commit updated translations
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ch/ gr/ lt/ hb/
+          if git diff --cached --quiet; then
+            echo "No translation changes to commit."
+          else
+            git commit -m "chore: auto-translate pages [skip ci]"
+            git push
+          fi
