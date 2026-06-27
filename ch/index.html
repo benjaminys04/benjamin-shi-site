@@ -171,6 +171,22 @@
       text-underline-offset: 3px;
     }
     .lang-switch .sep { padding: 0 0.45em; opacity: 0.6; }
+
+    /* Mobile only. The desktop layout above is unchanged; these rules just
+       fix proportions on narrow phone screens: a tighter top margin, slightly
+       smaller body type, and a smaller heading so the name and the theme
+       toggle sit comfortably on one row. */
+    @media (max-width: 600px) {
+      body {
+        margin: 56px auto;
+        font-size: 18px;
+      }
+      h1 { font-size: 1.8em; } /* ~32px, down from 40px */
+      /* The Greek page forces its long Hamming title onto one line so it
+         fits the 600px desktop column; on a phone that overflows, so let it
+         wrap. (Dormant on every other language; only matches lang="el".) */
+      [lang="el"] li { white-space: normal; }
+    }
   </style>
 </head>
 <body>
