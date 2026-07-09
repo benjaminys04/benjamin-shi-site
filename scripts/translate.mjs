@@ -63,8 +63,7 @@ async function translate(html, lang) {
     },
     body: JSON.stringify({
       model: MODEL,
-      max_tokens: 8000,
-      temperature: 0,
+      max_tokens: 16000,
       messages: [{ role: "user", content: buildPrompt(html, lang) }],
     }),
   });
