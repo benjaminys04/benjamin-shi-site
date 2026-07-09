@@ -55,8 +55,12 @@
     // Latin can't swap out from under the caret.
     "body.tw-typing .motto .latin{opacity:1 !important}",
     "body.tw-typing .motto .english{opacity:0 !important}",
-    ".tw-chrome{opacity:0 !important;pointer-events:none;transition:opacity 0.6s ease}",
-    ".tw-chrome.tw-chrome-in{opacity:1 !important;pointer-events:auto}",
+    // The transition lives on the -in class only. On the base class it would
+    // ANIMATE the initial hide: on a real network the browser computes styles
+    // before this script arrives, so opacity 1 -> 0 would fade over 0.6s and
+    // the chrome would flash at page open instead of vanishing instantly.
+    ".tw-chrome{opacity:0 !important;pointer-events:none}",
+    ".tw-chrome.tw-chrome-in{opacity:1 !important;pointer-events:auto;transition:opacity 0.6s ease}",
     ".tw-name-in{animation:tw-name 0.7s ease-out both}",
     "@keyframes tw-name{from{opacity:0}to{opacity:1}}",
     ".tw-skip{position:fixed;inset-inline:0;bottom:14px;display:block;margin:0 auto;appearance:none;-webkit-appearance:none;background:none;border:0;padding:6px 12px;text-align:center;font:inherit;font-style:italic;font-size:0.7em;color:var(--hover);opacity:0;transition:opacity 1s ease;pointer-events:none;cursor:pointer}",
