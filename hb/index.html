@@ -25,24 +25,30 @@
       }, 1500);
     })();
   </script>
+  <script>
+    // Theme boot: apply the saved (or OS-preferred) dark mode before first
+    // paint so dark-mode visitors never get a white flash. setTheme() at the
+    // bottom of the page stores the visitor's explicit choice.
+    (function () {
+      try {
+        var stored = localStorage.getItem('theme');
+        if (stored === 'dark' || (!stored && window.matchMedia &&
+            matchMedia('(prefers-color-scheme: dark)').matches)) {
+          document.documentElement.classList.add('dark');
+        }
+      } catch (e) {}
+    })();
+  </script>
   <style>
     :root {
       --bg: #fdfdfd;
       --text: #222;
       --hover: #888;
-      --border: #ccc;
-      --toggle-bg: #f0f0f0;
-      --active-bg: #222;
-      --active-text: #fdfdfd;
     }
-    body.dark {
+    html.dark {
       --bg: #1a1a1a;
       --text: #e8e8e8;
       --hover: #888;
-      --border: #444;
-      --toggle-bg: #2a2a2a;
-      --active-bg: #e8e8e8;
-      --active-text: #1a1a1a;
     }
     body {
       font-family: "EB Garamond", Garamond, "Adobe Garamond Pro", Georgia, serif;
@@ -166,10 +172,10 @@
 </head>
 <body>
   <div class="header-row">
-    <h1>Benjamin Shi <a href="https://www.youtube.com/watch?v=0bh-4Zn5we0&t=0" class="secret">✹</a></h1>
+    <h1>Benjamin Shi <a href="https://www.youtube.com/watch?v=0bh-4Zn5we0&t=0" class="secret" aria-label="הפתעה קטנה">✹</a></h1>
     <div class="theme-switch">
-      <button id="light-btn" class="active" onclick="setTheme('light')" aria-label="מצב בהיר">☀</button>
-      <button id="dark-btn" onclick="setTheme('dark')" aria-label="מצב כהה">☾</button>
+      <button id="light-btn" class="active" onclick="setTheme('light')" aria-pressed="true" aria-label="מצב בהיר">☀</button>
+      <button id="dark-btn" onclick="setTheme('dark')" aria-pressed="false" aria-label="מצב כהה">☾</button>
     </div>
   </div>
 
@@ -191,13 +197,13 @@
     <ul>
       <li><em>סין</em> — edward rutherfurd</li>
       <li><em>שדים</em> — fyodor dostoevsky</li>
-      <li><em>אנשי העתיד</em> — douglas wilson</li>
       <li><em>סופת הפלדה</em> — ernst jünger</li>
+      <li><em>מעשי הדנים</em> — saxo grammaticus</li>
       <li><em>שברים של מעשה</em> — vannevar bush</li>
-      <li><em>העולם למכירה</em> — javier blas ו-jack farchy</li>
       <li><em>דרשות</em> — theodorus jacobus frelinghuysen</li>
-      <li><em>טוקיו המתהווה</em> — joe mcreynolds ו-jorge almazán</li>
+      <li><em>העולם למכירה</em> — javier blas ו-jack farchy</li>
       <li><em>חוקתנות הטוב המשותף</em> — adrian vermeule</li>
+      <li><em>טוקיו המתהווה</em> — joe mcreynolds ו-jorge almazán</li>
       <li><em>אמנות העשייה במדע ובהנדסה</em> — richard hamming</li>
     </ul>
   </div>
@@ -208,10 +214,27 @@
 
   <script>
     function setTheme(mode) {
-      document.body.classList.toggle('dark', mode === 'dark');
-      document.getElementById('light-btn').classList.toggle('active', mode === 'light');
-      document.getElementById('dark-btn').classList.toggle('active', mode === 'dark');
+      var dark = mode === 'dark';
+      var lightBtn = document.getElementById('light-btn');
+      var darkBtn = document.getElementById('dark-btn');
+      document.documentElement.classList.toggle('dark', dark);
+      lightBtn.classList.toggle('active', !dark);
+      darkBtn.classList.toggle('active', dark);
+      lightBtn.setAttribute('aria-pressed', String(!dark));
+      darkBtn.setAttribute('aria-pressed', String(dark));
+      try { localStorage.setItem('theme', mode); } catch (e) {}
     }
+    // The head script may have applied the dark theme before paint; bring
+    // the toggle buttons in line with the mode the page really loaded in.
+    (function () {
+      if (!document.documentElement.classList.contains('dark')) return;
+      var lightBtn = document.getElementById('light-btn');
+      var darkBtn = document.getElementById('dark-btn');
+      lightBtn.classList.remove('active');
+      darkBtn.classList.add('active');
+      lightBtn.setAttribute('aria-pressed', 'false');
+      darkBtn.setAttribute('aria-pressed', 'true');
+    })();
     // Mark the current language in the switcher based on the URL path.
     (function () {
       var p = location.pathname.replace(/\/index\.html$/, '').replace(/\/+$/, '');

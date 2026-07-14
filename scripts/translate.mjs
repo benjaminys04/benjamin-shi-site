@@ -39,8 +39,8 @@ Output ONLY the complete, valid HTML document — no markdown, no code fences, n
 
 ABSOLUTE RULES — follow every one:
 - Preserve the document structure byte-for-byte except for the human-visible natural-language text. Do not touch tag names, attribute names, class names, id values, the <style> block, the <script> blocks, or any inline JS.
-- Do NOT translate or modify any URL, href, src, or the data: favicon. Keep all links pointing where they point.
-- Translate visible text nodes and these human-readable attributes only: each button's aria-label, and the <nav class="lang-switch"> aria-label.
+- Do NOT translate or modify any URL, href, src, or the favicon links. Keep all links pointing where they point.
+- Translate visible text nodes and these human-readable attributes only: each button's aria-label, the aria-label on the <a class="secret"> link, and the <nav class="lang-switch"> aria-label.
 - Do NOT translate the language-switcher link labels inside <nav class="lang-switch"> (english · 中文 · ελληνικά · latina · עברית). They are endonyms and must stay exactly as-is in every language.
 - Do NOT translate proper names: the heading "Benjamin Shi", the <title> "Benjamin Shi", and the brand link texts "twitter", "substack", "linkedin", and "garamond". Leave them exactly as written.
 - In the reading list, translate the MEANING of each book title (inside <em>), but keep every author's name in its original Latin spelling, unchanged (e.g. "edward rutherfurd", "ernst jünger", "javier blas"). Translate the conjunction "and" between two authors into ${lang.name}.
