@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#fdfdfd" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#1a1a1a" media="(prefers-color-scheme: dark)">
   <title>Benjamin Shi</title>
   <link rel="icon" href="/favicon.ico?v=2" sizes="any">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=2">
@@ -32,23 +35,37 @@
     (function () {
       try {
         var stored = localStorage.getItem('theme');
-        if (stored === 'dark' || (!stored && window.matchMedia &&
-            matchMedia('(prefers-color-scheme: dark)').matches)) {
-          document.documentElement.classList.add('dark');
+        var dark = stored === 'dark' || (!stored && window.matchMedia &&
+            matchMedia('(prefers-color-scheme: dark)').matches);
+        if (dark) document.documentElement.classList.add('dark');
+        // A stored choice can differ from the OS scheme the theme-color
+        // metas key off, so pin them to the theme the page really uses.
+        var metas = document.querySelectorAll('meta[name="theme-color"]');
+        for (var i = 0; i < metas.length; i++) {
+          metas[i].setAttribute('content', dark ? '#1a1a1a' : '#fdfdfd');
         }
       } catch (e) {}
     })();
   </script>
   <style>
     :root {
+      color-scheme: light;
       --bg: #fdfdfd;
       --text: #222;
       --hover: #888;
     }
     html.dark {
+      color-scheme: dark;
       --bg: #1a1a1a;
       --text: #e8e8e8;
       --hover: #888;
+    }
+    /* The canvas color lives on <html> itself, not only propagated from
+       <body>, so the very first paint (and any moment body is hidden by
+       the typewriter boot guard) is already the right color. */
+    html {
+      background: var(--bg);
+      transition: background 0.4s ease;
     }
     body {
       font-family: "EB Garamond", Garamond, "Adobe Garamond Pro", Georgia, serif;
@@ -222,6 +239,10 @@
       darkBtn.classList.toggle('active', dark);
       lightBtn.setAttribute('aria-pressed', String(!dark));
       darkBtn.setAttribute('aria-pressed', String(dark));
+      var metas = document.querySelectorAll('meta[name="theme-color"]');
+      for (var i = 0; i < metas.length; i++) {
+        metas[i].setAttribute('content', dark ? '#1a1a1a' : '#fdfdfd');
+      }
       try { localStorage.setItem('theme', mode); } catch (e) {}
     }
     // The head script may have applied the dark theme before paint; bring
