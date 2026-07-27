@@ -3,8 +3,11 @@ name: Translate pages
 # Whenever the canonical English page changes on main, regenerate the
 # Chinese (/ch), Greek (/gr), Latin (/lt) and Hebrew (/hb) copies with Claude
 # and commit them. The commit only touches the translated folders, never
-# index.html, so it does not re-trigger this workflow (no loop). Cloudflare
-# redeploys all pages on the resulting commit.
+# index.html, so it does not re-trigger this workflow (no loop). Its message
+# carries "[skip actions]" — honored by GitHub Actions (extra loop guard) but
+# NOT by Cloudflare Pages, so the translations deploy immediately. (The old
+# "[skip ci]" marker also suppressed the Cloudflare build, leaving fresh
+# translations undeployed until the next unrelated push.)
 
 on:
   push:
@@ -46,6 +49,6 @@ jobs:
           if git diff --cached --quiet; then
             echo "No translation changes to commit."
           else
-            git commit -m "chore: auto-translate pages [skip ci]"
+            git commit -m "chore: auto-translate pages [skip actions]"
             git push
           fi
