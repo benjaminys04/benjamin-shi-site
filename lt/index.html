@@ -34,19 +34,27 @@
       --text: #222;
       --hover: #888;
     }
+    /* No color-scheme here, deliberately: color-scheme cannot animate, so
+       flipping it made Chrome swap the UA canvas under the page instantly
+       while the 0.4s background fade lagged behind — the black-and-white
+       rectangle flash on every theme switch. The scheme stays light; dark
+       mode is entirely our own painted colors. */
     html.dark {
-      color-scheme: dark;
       --bg: #1a1a1a;
       --text: #e8e8e8;
       --hover: #888;
     }
     /* The canvas color lives on <html> itself, not only propagated from
        <body>, so the very first paint (and any moment body is hidden by
-       the typewriter boot guard) is already the right color. */
+       the typewriter boot guard) is already the right color. Theme changes
+       swap in a single frame — no background transition — so the canvas,
+       the column, and the text can never disagree mid-fade. */
     html {
       background: var(--bg);
-      transition: background 0.4s ease;
     }
+    /* setTheme() holds this class for the swap frame so no element's
+       hover/color transition can lag the theme change. */
+    html.theme-snap, html.theme-snap * { transition: none !important; }
     body {
       font-family: "EB Garamond", Garamond, "Adobe Garamond Pro", Georgia, serif;
       max-width: 600px;
@@ -56,7 +64,6 @@
       line-height: 1.2;
       color: var(--text);
       background: var(--bg);
-      transition: background 0.4s ease, color 0.4s ease;
     }
     .header-row {
       display: flex;
@@ -169,10 +176,10 @@
 </head>
 <body>
   <div class="header-row">
-    <h1>Benjamin Shi <a href="https://www.youtube.com/watch?v=0bh-4Zn5we0&t=0" class="secret" aria-label="parvum inopinatum">✹</a></h1>
+    <h1>Benjamin Shi <a href="https://www.youtube.com/watch?v=0bh-4Zn5we0&t=0" class="secret" aria-label="parva res inopinata">✹</a></h1>
     <div class="theme-switch">
-      <button id="light-btn" class="active" onclick="setTheme('light')" aria-pressed="true" aria-label="Modus lucidus">☀</button>
-      <button id="dark-btn" onclick="setTheme('dark')" aria-pressed="false" aria-label="Modus obscurus">☾</button>
+      <button id="light-btn" class="active" onclick="setTheme('light')" aria-pressed="true" aria-label="Lux clara">☀</button>
+      <button id="dark-btn" onclick="setTheme('dark')" aria-pressed="false" aria-label="Tenebrae">☾</button>
     </div>
   </div>
 
@@ -196,12 +203,12 @@
       <li><em>daemones</em> — fyodor dostoevsky</li>
       <li><em>tempestas ferri</em> — ernst jünger</li>
       <li><em>gesta danorum</em> — saxo grammaticus</li>
-      <li><em>partes actionis</em> — vannevar bush</li>
+      <li><em>actionis fragmenta</em> — vannevar bush</li>
       <li><em>sermones</em> — theodorus jacobus frelinghuysen</li>
       <li><em>mundus venalis</em> — javier blas et jack farchy</li>
       <li><em>constitutionalismus boni communis</em> — adrian vermeule</li>
-      <li><em>tokium enascens</em> — joe mcreynolds et jorge almazán</li>
-      <li><em>ars scientiae et machinationis exercendae</em> — richard hamming</li>
+      <li><em>tokium emergens</em> — joe mcreynolds et jorge almazán</li>
+      <li><em>ars scientiae atque machinationis exercendae</em> — richard hamming</li>
     </ul>
   </div>
 
@@ -212,9 +219,16 @@
   <script>
     function setTheme(mode) {
       var dark = mode === 'dark';
+      var root = document.documentElement;
       var lightBtn = document.getElementById('light-btn');
       var darkBtn = document.getElementById('dark-btn');
-      document.documentElement.classList.toggle('dark', dark);
+      // Freeze every transition for the swap frame so the whole page —
+      // canvas, column, glyphs, caret — changes together, then restore.
+      root.classList.add('theme-snap');
+      root.classList.toggle('dark', dark);
+      var unsnap = function () { root.classList.remove('theme-snap'); };
+      requestAnimationFrame(function () { requestAnimationFrame(unsnap); });
+      setTimeout(unsnap, 120); // rAF stalls in hidden tabs — always restore
       lightBtn.classList.toggle('active', !dark);
       darkBtn.classList.toggle('active', dark);
       lightBtn.setAttribute('aria-pressed', String(!dark));
