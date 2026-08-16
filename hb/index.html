@@ -3,13 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="color-scheme" content="light dark">
-  <meta name="theme-color" content="#fdfdfd" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#1a1a1a" media="(prefers-color-scheme: dark)">
+  <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="#fdfdfd">
   <title>Benjamin Shi</title>
-  <link rel="icon" href="/favicon.ico?v=2" sizes="any">
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=2">
-  <link rel="apple-touch-icon" href="/favicon-180.png?v=2">
+  <link rel="icon" href="/favicon.ico?v=3" sizes="any">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=3">
+  <link rel="apple-touch-icon" href="/favicon-180.png?v=3">
   <script>
     // Typewriter intro boot guard: hide the page before first paint so
     // typewriter.js can write it back in. Skipped for reduced-motion
@@ -26,25 +25,6 @@
         document.documentElement.className =
           document.documentElement.className.replace(' tw-boot', '');
       }, 1500);
-    })();
-  </script>
-  <script>
-    // Theme boot: apply the saved (or OS-preferred) dark mode before first
-    // paint so dark-mode visitors never get a white flash. setTheme() at the
-    // bottom of the page stores the visitor's explicit choice.
-    (function () {
-      try {
-        var stored = localStorage.getItem('theme');
-        var dark = stored === 'dark' || (!stored && window.matchMedia &&
-            matchMedia('(prefers-color-scheme: dark)').matches);
-        if (dark) document.documentElement.classList.add('dark');
-        // A stored choice can differ from the OS scheme the theme-color
-        // metas key off, so pin them to the theme the page really uses.
-        var metas = document.querySelectorAll('meta[name="theme-color"]');
-        for (var i = 0; i < metas.length; i++) {
-          metas[i].setAttribute('content', dark ? '#1a1a1a' : '#fdfdfd');
-        }
-      } catch (e) {}
     })();
   </script>
   <style>
@@ -198,7 +178,7 @@
 
   <p class="motto">
     <span class="latin">laudem non quaero; culpam non timeo</span>
-    <span class="english">איני מבקש שבח; איני חושש מגנאי</span>
+    <span class="english">איני מבקש שבחים; איני חושש מגנאי</span>
   </p>
 
   <p>אני אוהב את <a href="https://en.wikipedia.org/wiki/Garamond">garamond</a>. אני גם <a href="https://parakletos.vc/">משקיע</a>.</p>
@@ -215,13 +195,13 @@
       <li><em>סין</em> — edward rutherfurd</li>
       <li><em>שדים</em> — fyodor dostoevsky</li>
       <li><em>סופת הפלדה</em> — ernst jünger</li>
-      <li><em>מעללי הדנים</em> — saxo grammaticus</li>
-      <li><em>קטעים מן המעשה</em> — vannevar bush</li>
+      <li><em>מעשי הדנים</em> — saxo grammaticus</li>
+      <li><em>שברי המעשה</em> — vannevar bush</li>
       <li><em>דרשות</em> — theodorus jacobus frelinghuysen</li>
-      <li><em>העולם למכירה</em> — javier blas ו‑jack farchy</li>
-      <li><em>קונסטיטוציונליזם של הטוב המשותף</em> — adrian vermeule</li>
-      <li><em>טוקיו המתהווה</em> — joe mcreynolds ו‑jorge almazán</li>
-      <li><em>אמנות המדע וההנדסה</em> — richard hamming</li>
+      <li><em>העולם למכירה</em> — javier blas ו-jack farchy</li>
+      <li><em>חוקתיות הטוב המשותף</em> — adrian vermeule</li>
+      <li><em>טוקיו המתהווה</em> — joe mcreynolds ו-jorge almazán</li>
+      <li><em>אמנות העיסוק במדע ובהנדסה</em> — richard hamming</li>
     </ul>
   </div>
 
@@ -243,19 +223,7 @@
       for (var i = 0; i < metas.length; i++) {
         metas[i].setAttribute('content', dark ? '#1a1a1a' : '#fdfdfd');
       }
-      try { localStorage.setItem('theme', mode); } catch (e) {}
     }
-    // The head script may have applied the dark theme before paint; bring
-    // the toggle buttons in line with the mode the page really loaded in.
-    (function () {
-      if (!document.documentElement.classList.contains('dark')) return;
-      var lightBtn = document.getElementById('light-btn');
-      var darkBtn = document.getElementById('dark-btn');
-      lightBtn.classList.remove('active');
-      darkBtn.classList.add('active');
-      lightBtn.setAttribute('aria-pressed', 'false');
-      darkBtn.setAttribute('aria-pressed', 'true');
-    })();
     // Mark the current language in the switcher based on the URL path.
     (function () {
       var p = location.pathname.replace(/\/index\.html$/, '').replace(/\/+$/, '');
