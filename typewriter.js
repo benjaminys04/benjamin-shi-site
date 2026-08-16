@@ -48,7 +48,11 @@
   var CSS = [
     // The caret is positioned geometrically from the last typed glyph, so
     // it lands on the true writing point even in RTL/bidi text.
-    ".tw-caret{position:absolute;background:var(--text);pointer-events:none}",
+    // The caret is a var(--text) block — solid black in light mode, solid
+    // white in dark. Without a transition a theme switch snapped it to the
+    // opposite color instantly while the page cross-faded around it: the
+    // black-and-white square flash. Fading it with the body cures that.
+    ".tw-caret{position:absolute;background:var(--text);pointer-events:none;transition:background 0.4s ease}",
     ".tw-caret.tw-blink{animation:tw-blink 0.9s step-end infinite}",
     "@keyframes tw-blink{0%,49%{opacity:1}50%,100%{opacity:0}}",
     // While typing, the motto's hover gloss stays put so the half-typed
