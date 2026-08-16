@@ -226,11 +226,9 @@
       // canvas, column, glyphs, caret — changes together, then restore.
       root.classList.add('theme-snap');
       root.classList.toggle('dark', dark);
-      requestAnimationFrame(function () {
-        requestAnimationFrame(function () {
-          root.classList.remove('theme-snap');
-        });
-      });
+      var unsnap = function () { root.classList.remove('theme-snap'); };
+      requestAnimationFrame(function () { requestAnimationFrame(unsnap); });
+      setTimeout(unsnap, 120); // rAF stalls in hidden tabs — always restore
       lightBtn.classList.toggle('active', !dark);
       darkBtn.classList.toggle('active', dark);
       lightBtn.setAttribute('aria-pressed', String(!dark));
