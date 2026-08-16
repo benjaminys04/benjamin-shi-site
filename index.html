@@ -34,19 +34,27 @@
       --text: #222;
       --hover: #888;
     }
+    /* No color-scheme here, deliberately: color-scheme cannot animate, so
+       flipping it made Chrome swap the UA canvas under the page instantly
+       while the 0.4s background fade lagged behind — the black-and-white
+       rectangle flash on every theme switch. The scheme stays light; dark
+       mode is entirely our own painted colors. */
     html.dark {
-      color-scheme: dark;
       --bg: #1a1a1a;
       --text: #e8e8e8;
       --hover: #888;
     }
     /* The canvas color lives on <html> itself, not only propagated from
        <body>, so the very first paint (and any moment body is hidden by
-       the typewriter boot guard) is already the right color. */
+       the typewriter boot guard) is already the right color. Theme changes
+       swap in a single frame — no background transition — so the canvas,
+       the column, and the text can never disagree mid-fade. */
     html {
       background: var(--bg);
-      transition: background 0.4s ease;
     }
+    /* setTheme() holds this class for the swap frame so no element's
+       hover/color transition can lag the theme change. */
+    html.theme-snap, html.theme-snap * { transition: none !important; }
     body {
       font-family: "EB Garamond", Garamond, "Adobe Garamond Pro", Georgia, serif;
       max-width: 600px;
@@ -56,7 +64,6 @@
       line-height: 1.2;
       color: var(--text);
       background: var(--bg);
-      transition: background 0.4s ease, color 0.4s ease;
     }
     .header-row {
       display: flex;
@@ -212,9 +219,18 @@
   <script>
     function setTheme(mode) {
       var dark = mode === 'dark';
+      var root = document.documentElement;
       var lightBtn = document.getElementById('light-btn');
       var darkBtn = document.getElementById('dark-btn');
-      document.documentElement.classList.toggle('dark', dark);
+      // Freeze every transition for the swap frame so the whole page —
+      // canvas, column, glyphs, caret — changes together, then restore.
+      root.classList.add('theme-snap');
+      root.classList.toggle('dark', dark);
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () {
+          root.classList.remove('theme-snap');
+        });
+      });
       lightBtn.classList.toggle('active', !dark);
       darkBtn.classList.toggle('active', dark);
       lightBtn.setAttribute('aria-pressed', String(!dark));
