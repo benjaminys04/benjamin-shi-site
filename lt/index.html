@@ -117,7 +117,9 @@
       transform: rotate(30deg);
     }
     /* Flat, typographic theme toggle: just a sun and a moon. The active
-       mode is inked; the other waits in gray. */
+       mode is inked; the other waits in gray. The &#xFE0E; after each
+       glyph pins the monochrome text presentation — without it, phone
+       emoji fonts replace the sun with the full-color emoji. */
     .theme-switch {
       display: inline-flex;
       gap: 0.55em;
@@ -178,8 +180,8 @@
   <div class="header-row">
     <h1>Benjamin Shi <a href="https://www.youtube.com/watch?v=0bh-4Zn5we0&t=0" class="secret" aria-label="parva res inopinata">✹</a></h1>
     <div class="theme-switch">
-      <button id="light-btn" class="active" onclick="setTheme('light')" aria-pressed="true" aria-label="Lux clara">☀</button>
-      <button id="dark-btn" onclick="setTheme('dark')" aria-pressed="false" aria-label="Tenebrae">☾</button>
+      <button id="light-btn" class="active" onclick="setTheme('light')" aria-pressed="true" aria-label="Lux clara">☀&#xFE0E;</button>
+      <button id="dark-btn" onclick="setTheme('dark')" aria-pressed="false" aria-label="Tenebrae">☾&#xFE0E;</button>
     </div>
   </div>
 
