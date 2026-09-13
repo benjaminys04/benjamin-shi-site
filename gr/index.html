@@ -6,9 +6,12 @@
   <meta name="color-scheme" content="light">
   <meta name="theme-color" content="#fdfdfd">
   <title>Benjamin Shi</title>
-  <link rel="icon" href="/favicon.ico?v=3" sizes="any">
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=3">
-  <link rel="apple-touch-icon" href="/favicon-180.png?v=3">
+  <!-- The ICO is declared with a real size, not sizes="any": with "any"
+       Chrome prefers the ICO and never loads the SVG, whose media query is
+       what turns the star light on dark tab bars. ICO before SVG on purpose. -->
+  <link rel="icon" href="/favicon.ico?v=4" sizes="32x32">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=4">
+  <link rel="apple-touch-icon" href="/favicon-180.png?v=4">
   <script>
     // Typewriter intro boot guard: hide the page before first paint so
     // typewriter.js can write it back in. Skipped for reduced-motion
@@ -22,8 +25,9 @@
       document.head.appendChild(s);
       document.documentElement.className += ' tw-boot';
       window.__twReveal = setTimeout(function () {
-        document.documentElement.className =
-          document.documentElement.className.replace(' tw-boot', '');
+        // classList, not a string replace: any other class write on <html>
+        // re-serialises the attribute and would leave the page hidden.
+        document.documentElement.classList.remove('tw-boot');
       }, 1500);
     })();
   </script>
@@ -32,7 +36,7 @@
       color-scheme: light;
       --bg: #fdfdfd;
       --text: #222;
-      --hover: #888;
+      --hover: #747474; /* 4.6:1 on the light canvas; #888 was 3.5:1 */
     }
     /* No color-scheme here, deliberately: color-scheme cannot animate, so
        flipping it made Chrome swap the UA canvas under the page instantly
@@ -74,31 +78,42 @@
     h1 { font-weight: 500; font-size: 2em; margin: 0; }
     a { color: var(--text); text-decoration: underline; text-underline-offset: 3px; }
     a:hover { color: var(--hover); }
+    /* The Latin and its gloss share one grid cell, so the box is sized by
+       the longer of the two and both may wrap: an absolutely positioned,
+       non-wrapping gloss overflowed narrow phones (the Greek one clipped).
+       The gloss shows on hover, on touch, and on keyboard focus. */
     .motto {
-      position: relative;
+      display: inline-grid;
+      max-width: 100%;
       font-style: italic;
       cursor: default;
       margin: 0 0 0.2em 0;
-      display: inline-block;
       line-height: 1.2;
     }
     .motto .latin,
     .motto .english {
+      grid-area: 1 / 1;
+      min-width: 0;
       transition: opacity 0.4s ease;
-      display: block;
+    }
+    .motto .latin {
+      direction: ltr;
+      unicode-bidi: isolate;
     }
     .motto .english {
-      position: absolute;
-      top: 0;
-      inset-inline-start: 0;
-      opacity: 0;
-      white-space: nowrap;
-    }
-    .motto:hover .latin {
       opacity: 0;
     }
-    .motto:hover .english {
+    .motto:hover .latin,
+    .motto:focus-visible .latin {
+      opacity: 0;
+    }
+    .motto:hover .english,
+    .motto:focus-visible .english {
       opacity: 1;
+    }
+    .motto:focus-visible {
+      outline: 1px solid var(--hover);
+      outline-offset: 4px;
     }
     .links { margin: 0 0 0.8em 0; }
     .section { margin-top: 1.2em; }
@@ -185,12 +200,12 @@
     </div>
   </div>
 
-  <p class="motto">
-    <span class="latin">laudem non quaero; culpam non timeo</span>
-    <span class="english">δεν ζητώ έπαινο· δεν φοβάμαι την κατηγορία</span>
+  <p class="motto" tabindex="0">
+    <span class="latin" lang="la">laudem non quaero; culpam non timeo</span>
+    <span class="english">δεν ζητώ έπαινο· δεν φοβάμαι τον ψόγο</span>
   </p>
 
-  <p>λατρεύω τη <a href="https://en.wikipedia.org/wiki/Garamond">garamond</a>. επίσης <a href="https://parakletos.vc/">επενδύω</a>.</p>
+  <p>αγαπώ τη <a href="https://en.wikipedia.org/wiki/Garamond">garamond</a>. επίσης <a href="https://parakletos.vc/">επενδύω</a>.</p>
 
   <div class="links">
     <a href="https://x.com/benjaminys04">twitter</a> /
@@ -199,12 +214,12 @@
   </div>
 
   <div class="section">
-    <p>διαβάζω τώρα:</p>
+    <p>διαβάζω αυτή τη στιγμή:</p>
     <ul>
       <li><em>κίνα</em> — edward rutherfurd</li>
-      <li><em>δαιμονισμένοι</em> — fyodor dostoevsky</li>
-      <li><em>η καταιγίδα του ατσαλιού</em> — ernst jünger</li>
-      <li><em>gesta danorum</em> — saxo grammaticus</li>
+      <li><em>οι δαιμονισμένοι</em> — fyodor dostoevsky</li>
+      <li><em>η θύελλα του ατσαλιού</em> — ernst jünger</li>
+      <li><em>τα κατορθώματα των δανών</em> — saxo grammaticus</li>
       <li><em>κομμάτια της δράσης</em> — vannevar bush</li>
       <li><em>κηρύγματα</em> — theodorus jacobus frelinghuysen</li>
       <li><em>ο κόσμος προς πώληση</em> — javier blas και jack farchy</li>
@@ -215,7 +230,7 @@
   </div>
 
   <nav class="lang-switch" aria-label="γλώσσα">
-    <a href="/" hreflang="en" data-path="/">english</a><span class="sep">·</span><a href="/ch" hreflang="zh" data-path="/ch">中文</a><span class="sep">·</span><a href="/gr" hreflang="el" data-path="/gr">ελληνικά</a><span class="sep">·</span><a href="/lt" hreflang="la" data-path="/lt">latina</a><span class="sep">·</span><a href="/hb" hreflang="he" data-path="/hb">עברית</a>
+    <a href="/" hreflang="en" lang="en" data-path="/">english</a><span class="sep">·</span><a href="/ch/" hreflang="zh" lang="zh" data-path="/ch">中文</a><span class="sep">·</span><a href="/gr/" hreflang="el" lang="el" data-path="/gr">ελληνικά</a><span class="sep">·</span><a href="/lt/" hreflang="la" lang="la" data-path="/lt">latina</a><span class="sep">·</span><a href="/hb/" hreflang="he" lang="he" data-path="/hb">עברית</a>
   </nav>
 
   <script>
