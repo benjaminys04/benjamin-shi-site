@@ -12,6 +12,14 @@
   <link rel="icon" href="/favicon.ico?v=4" sizes="32x32">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=4">
   <link rel="apple-touch-icon" href="/favicon-180.png?v=4">
+  <!-- EB Garamond, self-hosted (Fontsource build of the OFL family), split
+       by script so a page only fetches what it sets: Latin regular, italic
+       and the medium the name is set in; Greek regular and italic for /gr/.
+       The three Latin faces are preloaded so the typewriter starts in the
+       right face; the Greek pair arrives on demand via unicode-range. -->
+  <link rel="preload" href="/fonts/eb-garamond-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/fonts/eb-garamond-latin-400-italic.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/fonts/eb-garamond-latin-500-normal.woff2" as="font" type="font/woff2" crossorigin>
   <script>
     // Typewriter intro boot guard: hide the page before first paint so
     // typewriter.js can write it back in. Skipped for reduced-motion
@@ -32,6 +40,46 @@
     })();
   </script>
   <style>
+    @font-face {
+      font-family: "EB Garamond";
+      font-style: normal;
+      font-weight: 400;
+      font-display: swap;
+      src: url("/fonts/eb-garamond-latin-400-normal.woff2") format("woff2");
+      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+    }
+    @font-face {
+      font-family: "EB Garamond";
+      font-style: italic;
+      font-weight: 400;
+      font-display: swap;
+      src: url("/fonts/eb-garamond-latin-400-italic.woff2") format("woff2");
+      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+    }
+    @font-face {
+      font-family: "EB Garamond";
+      font-style: normal;
+      font-weight: 500;
+      font-display: swap;
+      src: url("/fonts/eb-garamond-latin-500-normal.woff2") format("woff2");
+      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+    }
+    @font-face {
+      font-family: "EB Garamond";
+      font-style: normal;
+      font-weight: 400;
+      font-display: swap;
+      src: url("/fonts/eb-garamond-greek-400-normal.woff2") format("woff2");
+      unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+    }
+    @font-face {
+      font-family: "EB Garamond";
+      font-style: italic;
+      font-weight: 400;
+      font-display: swap;
+      src: url("/fonts/eb-garamond-greek-400-italic.woff2") format("woff2");
+      unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+    }
     :root {
       color-scheme: light;
       --bg: #fdfdfd;
@@ -202,10 +250,10 @@
 
   <p class="motto" tabindex="0">
     <span class="latin" lang="la">laudem non quaero; culpam non timeo</span>
-    <span class="english">我不求赞誉，也不惧非议</span>
+    <span class="english">我不求赞誉，也不惧责难</span>
   </p>
 
-  <p>我喜欢 <a href="https://en.wikipedia.org/wiki/Garamond">garamond</a>。我也做<a href="https://parakletos.vc/">投资</a>。</p>
+  <p>我热爱 <a href="https://en.wikipedia.org/wiki/Garamond">garamond</a>。我也做<a href="https://parakletos.vc/">投资</a>。</p>
 
   <div class="links">
     <a href="https://x.com/benjaminys04">twitter</a> /
@@ -214,7 +262,7 @@
   </div>
 
   <div class="section">
-    <p>正在读：</p>
+    <p>正在阅读：</p>
     <ul>
       <li><em>中国</em> — edward rutherfurd</li>
       <li><em>群魔</em> — fyodor dostoevsky</li>
@@ -223,7 +271,7 @@
       <li><em>行动的片段</em> — vannevar bush</li>
       <li><em>布道集</em> — theodorus jacobus frelinghuysen</li>
       <li><em>待售的世界</em> — javier blas 和 jack farchy</li>
-      <li><em>共善宪政主义</em> — adrian vermeule</li>
+      <li><em>共同善的宪政主义</em> — adrian vermeule</li>
       <li><em>涌现的东京</em> — joe mcreynolds 和 jorge almazán</li>
       <li><em>科学与工程之道</em> — richard hamming</li>
     </ul>
