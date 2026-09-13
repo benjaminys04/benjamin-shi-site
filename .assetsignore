@@ -1,0 +1,12 @@
+# Not part of the site: never upload these as static assets.
+.git
+.github
+.claude
+.gitattributes
+.gitignore
+.assetsignore
+wrangler.jsonc
+scripts
+README.md
+.DS_Store
+.wrangler

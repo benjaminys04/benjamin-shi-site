@@ -1,0 +1,16 @@
+{
+  // benjaminys.com is a Cloudflare Worker that serves this repo as static
+  // assets (Workers Builds deploys it on every push to main). This file
+  // only configures how those assets are served:
+  //   - unknown paths get the root 404.html instead of an empty 404
+  //   - /ch resolves to /ch/ and /404.html to /404, as before
+  //   - .assetsignore keeps repo internals (workflow, scripts, README)
+  //     out of the deployed site
+  "name": "benjamin-shi-site",
+  "compatibility_date": "2026-09-11",
+  "assets": {
+    "directory": "./",
+    "not_found_handling": "404-page",
+    "html_handling": "auto-trailing-slash"
+  }
+}
