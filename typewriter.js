@@ -67,11 +67,16 @@
     ".tw-name-in{animation:tw-name 0.7s ease-out both}",
     "@keyframes tw-name{from{opacity:0}to{opacity:1}}",
     ".tw-skip{position:fixed;inset-inline:0;bottom:14px;display:block;margin:0 auto;appearance:none;-webkit-appearance:none;background:none;border:0;padding:6px 12px;text-align:center;font:inherit;font-style:italic;font-size:0.7em;color:var(--hover);opacity:0;transition:opacity 1s ease;pointer-events:none;cursor:pointer}",
-    ".tw-skip.tw-in{opacity:0.85;pointer-events:auto}",
+    // Full opacity once shown: at 0.85 the small gray hint fell to ~2.8:1
+    // against the light canvas, and it is the only visible way to skip.
+    ".tw-skip.tw-in{opacity:1;pointer-events:auto}",
     ".tw-skip:hover{color:var(--text)}",
     // Offscreen copy of the full text, readable by screen readers while the
     // visible lines are mid-animation.
-    ".tw-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}"
+    ".tw-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}",
+    // Printing finishes the page synchronously (beforeprint below); the
+    // animation helpers must never reach paper.
+    "@media print{.tw-caret,.tw-skip,.tw-sr{display:none !important}}"
   ].join("\n");
 
   var SKIP_HINTS = {
@@ -161,15 +166,25 @@
         if (text) nodes.push({ node: textNode, text: text });
       }
       if (!nodes.length) continue;
-      var anchors = lineEl.querySelectorAll("a");
-      for (var a = 0; a < anchors.length; a++) {
-        anchors[a].style.pointerEvents = "none";
-        anchors[a].tabIndex = -1;
+      // Everything focusable in the line (its links, and the line itself if
+      // it carries a tabindex, like the motto) is parked at tabindex=-1
+      // until the line is typed, so nothing hidden from screen readers can
+      // ever take keyboard focus. The original tabindex value is restored.
+      var focusEls = Array.prototype.slice.call(lineEl.querySelectorAll("a"));
+      if (lineEl.hasAttribute("tabindex")) focusEls.unshift(lineEl);
+      var focusables = [];
+      for (var a = 0; a < focusEls.length; a++) {
+        focusables.push({ el: focusEls[a], prev: focusEls[a].getAttribute("tabindex") });
+        focusEls[a].tabIndex = -1;
+        if (focusEls[a].tagName === "A") focusEls[a].style.pointerEvents = "none";
       }
       lines.push({
         el: lineEl,
+        scope: scope,
         nodes: nodes,
-        anchors: anchors,
+        focusables: focusables,
+        clone: null,
+        exposed: false,
         listItem: lineEl.tagName === "LI",
         sectionStart:
           lineEl.parentElement.classList.contains("section") &&
@@ -183,13 +198,30 @@
 
     // Screen readers keep the full text (offscreen) while the visible lines
     // are blanked and animated below.
+    // Each line's copy is handed back the moment that line finishes typing
+    // (see exposeLine), so assistive tech always has exactly one copy of
+    // every line. List items are cloned into a real <ul> so the reading
+    // list keeps its grouping; the emptied original list is hidden until
+    // its first item is done.
     var srClone = document.createElement("div");
     srClone.className = "tw-sr";
+    var srList = null;
     for (var q = 0; q < lines.length; q++) {
       var copy = lines[q].el.cloneNode(true);
+      if (copy.hasAttribute("tabindex")) copy.tabIndex = -1;
       var copyLinks = copy.querySelectorAll("a");
       for (var w = 0; w < copyLinks.length; w++) copyLinks[w].tabIndex = -1;
-      srClone.appendChild(copy);
+      if (lines[q].listItem) {
+        if (!srList) {
+          srList = document.createElement("ul");
+          srClone.appendChild(srList);
+        }
+        srList.appendChild(copy);
+      } else {
+        srList = null;
+        srClone.appendChild(copy);
+      }
+      lines[q].clone = copy;
     }
     body.appendChild(srClone);
 
@@ -199,6 +231,7 @@
       }
       lines[j].el.style.display = "none";
       lines[j].el.setAttribute("aria-hidden", "true");
+      if (lines[j].listItem) lines[j].el.parentElement.setAttribute("aria-hidden", "true");
     }
 
     // --- Reveal: just the name, gently -------------------------------------
@@ -214,7 +247,7 @@
     caret.className = "tw-caret";
     caret.setAttribute("aria-hidden", "true");
     body.appendChild(caret);
-    var caretAt = null; // {node, offset, el} for repositioning on resize
+    var caretAt = null; // {node, offset, line} for repositioning on resize
 
     function runIsRTL(text, offset, el) {
       for (var i = offset - 1; i >= 0; i--) {
@@ -225,8 +258,29 @@
       return getComputedStyle(el).direction === "rtl";
     }
 
-    function positionCaret(node, offset, el) {
-      caretAt = { node: node, offset: offset, el: el };
+    // Would a box at (x, y, w, h) paint over anything already typed in this
+    // line? In mixed-direction text (Latin inside the Hebrew page) the slot
+    // beside the last glyph can belong to a neighbouring bidi run.
+    function coversTypedText(x, y, w, h, line, node, offset) {
+      var r = document.createRange();
+      r.setStart(line.nodes[0].node, 0);
+      r.setEnd(node, offset);
+      var rects = r.getClientRects();
+      for (var i = 0; i < rects.length; i++) {
+        var t = rects[i];
+        if (x + 0.5 < t.right && x + w - 0.5 > t.left && y + 0.5 < t.bottom && y + h - 0.5 > t.top) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    function positionCaret(node, offset, line) {
+      caretAt = { node: node, offset: offset, line: line };
+      // Measure against the typed scope (the motto's Latin span, not the
+      // paragraph) so an isolated LTR run inside an RTL page reads its own
+      // direction and font.
+      var el = line.scope;
       var fs = parseFloat(getComputedStyle(el).fontSize) || 20;
       var w = fs * 0.5;
       var h = fs * 1.05;
@@ -242,10 +296,25 @@
           range.setEnd(node, k);
           rect = range.getBoundingClientRect();
           if (rect && (rect.width || rect.height)) {
-            var x = runIsRTL(node.nodeValue, k, el)
-              ? rect.left - gap - w
-              : rect.right + gap;
-            moveCaret(x, rect.top + (rect.height - h) / 2, w, h);
+            var rtl = runIsRTL(node.nodeValue, k, el);
+            var cw = w;
+            var x = rtl ? rect.left - gap - w : rect.right + gap;
+            var y = rect.top + (rect.height - h) / 2;
+            if (coversTypedText(x, y, cw, h, line, node, k)) {
+              // No room for the block beside this glyph: a thin bar at the
+              // same edge instead of painting over what is already written.
+              cw = Math.max(2, fs * 0.1);
+              x = rtl ? rect.left - gap - cw : rect.right + gap;
+              // Even the bar would cross the neighbouring run (a Latin name
+              // being written inside Hebrew text grows against the Hebrew
+              // that precedes it): the writing point is that boundary, so
+              // centre the bar on it — a pixel into each glyph's side
+              // bearing, over neither letter.
+              if (coversTypedText(x, y, cw, h, line, node, k)) {
+                x = (rtl ? rect.left : rect.right) - cw / 2;
+              }
+            }
+            moveCaret(x, y, cw, h);
             return;
           }
         }
@@ -291,7 +360,7 @@
     }
 
     function onResize() {
-      if (caretAt) positionCaret(caretAt.node, caretAt.offset, caretAt.el);
+      if (caretAt) positionCaret(caretAt.node, caretAt.offset, caretAt.line);
     }
     window.addEventListener("resize", onResize);
 
@@ -348,7 +417,7 @@
       var ch = part.text.charAt(ci);
       ci++;
       part.node.nodeValue = part.text.slice(0, ci);
-      positionCaret(part.node, ci, line.el);
+      positionCaret(part.node, ci, line);
       timer = setTimeout(typeTick, charDelay(ch, lineSpeed(line)));
     }
 
@@ -357,13 +426,13 @@
       line.el.style.display = "";
       ni = 0;
       ci = 0;
-      positionCaret(line.nodes[0].node, 0, line.el);
+      positionCaret(line.nodes[0].node, 0, line);
       typeTick();
     }
 
     function lineDone() {
       var line = lines[li];
-      enableAnchors(line);
+      exposeLine(line);
       if (line.listItem) listDone++;
       li++;
       if (li >= lines.length) return endSequence();
@@ -373,45 +442,77 @@
       timer = setTimeout(startLine, pause);
     }
 
-    function enableAnchors(line) {
-      for (var a = 0; a < line.anchors.length; a++) {
-        line.anchors[a].style.pointerEvents = "";
-        line.anchors[a].removeAttribute("tabindex");
+    // A finished line goes back to assistive tech and the keyboard in one
+    // step: its offscreen copy leaves, the original is un-hidden, and only
+    // then do its links (and its own tabindex) become reachable again.
+    function exposeLine(line) {
+      if (line.exposed) return;
+      line.exposed = true;
+      if (line.clone && line.clone.parentNode) {
+        var holder = line.clone.parentNode;
+        holder.removeChild(line.clone);
+        if (holder !== srClone && !holder.firstChild && holder.parentNode) {
+          holder.parentNode.removeChild(holder);
+        }
+      }
+      line.el.removeAttribute("aria-hidden");
+      if (line.listItem) line.el.parentElement.removeAttribute("aria-hidden");
+      for (var f = 0; f < line.focusables.length; f++) {
+        var item = line.focusables[f];
+        if (item.el.tagName === "A") item.el.style.pointerEvents = "";
+        if (item.prev === null) item.el.removeAttribute("tabindex");
+        else item.el.setAttribute("tabindex", item.prev);
       }
     }
 
     // --- Endings ------------------------------------------------------------
-    function chromeIn(stagger) {
+    // sync=true (printing) reveals the chrome in the same tick, no fade.
+    function chromeIn(stagger, sync) {
+      function reveal(item) {
+        item.el.classList.add("tw-chrome-in");
+        item.el.removeAttribute("aria-hidden");
+        for (var f = 0; f < item.focusables.length; f++) {
+          item.focusables[f].removeAttribute("tabindex");
+        }
+      }
+      // Strip the helper classes once the fade lands, returning the chrome
+      // to its stock styling (the star keeps its hover spin).
+      function settle(item) {
+        item.el.classList.remove("tw-chrome", "tw-chrome-in");
+      }
       for (var i = 0; i < chrome.length; i++) {
+        if (sync) {
+          reveal(chrome[i]);
+          settle(chrome[i]);
+          continue;
+        }
         (function (item, delay) {
           setTimeout(function () {
-            item.el.classList.add("tw-chrome-in");
-            item.el.removeAttribute("aria-hidden");
-            for (var f = 0; f < item.focusables.length; f++) {
-              item.focusables[f].removeAttribute("tabindex");
-            }
-            // Strip the helper classes once the fade lands, returning the
-            // chrome to its stock styling (the star keeps its hover spin,
-            // the toggle its pressed shadows).
-            setTimeout(function () {
-              item.el.classList.remove("tw-chrome", "tw-chrome-in");
-            }, T.chromeFade);
+            reveal(item);
+            setTimeout(function () { settle(item); }, T.chromeFade);
           }, delay);
         })(chrome[i], i * stagger);
       }
     }
 
+    var cleaned = false;
     function cleanup() {
+      if (cleaned) return;
+      cleaned = true;
       if (caret.parentNode) caret.parentNode.removeChild(caret);
       if (hint.parentNode) hint.parentNode.removeChild(hint);
       if (srClone.parentNode) srClone.parentNode.removeChild(srClone);
-      for (var i = 0; i < lines.length; i++) {
-        lines[i].el.removeAttribute("aria-hidden");
-      }
+      for (var i = 0; i < lines.length; i++) exposeLine(lines[i]);
       body.classList.remove("tw-typing");
       body.classList.add("tw-done");
       document.removeEventListener("keydown", onKey);
       window.removeEventListener("resize", onResize);
+      // The chrome is still fading in for a moment after cleanup; keep the
+      // print hook until every fade has settled so a print in that window
+      // still gets the whole page.
+      setTimeout(function () {
+        window.removeEventListener("beforeprint", onPrint);
+      }, chrome.length * T.chromeStagger + T.chromeFade + 100);
     }
 
     // Natural finish: one last blink where the writing stopped, chrome
@@ -426,23 +527,34 @@
       timer = setTimeout(cleanup, T.endBlink);
     }
 
-    // Skip: fill everything in at once.
-    function finish() {
-      if (completed) return;
-      completed = true;
+    // Skip: fill everything in at once. sync=true is the print path — the
+    // page must be whole before beforeprint returns, so no fades at all.
+    function finish(sync) {
+      if (completed && !sync) return;
       clearTimeout(timer);
       clearTimeout(hintTimer);
-      for (var i = 0; i < lines.length; i++) {
-        var line = lines[i];
-        for (var n = 0; n < line.nodes.length; n++) {
-          line.nodes[n].node.nodeValue = line.nodes[n].text;
+      if (!completed) {
+        completed = true;
+        for (var i = 0; i < lines.length; i++) {
+          var line = lines[i];
+          for (var n = 0; n < line.nodes.length; n++) {
+            line.nodes[n].node.nodeValue = line.nodes[n].text;
+          }
+          line.el.style.display = "";
+          exposeLine(line);
         }
-        line.el.style.display = "";
-        enableAnchors(line);
       }
-      chromeIn(120);
+      chromeIn(sync ? 0 : 120, sync);
       cleanup();
     }
+
+    // Printing mid-intro would otherwise print a half-written page. The
+    // name's own fade-in is cut short too, so it never prints pale.
+    function onPrint() {
+      if (h1) h1.classList.remove("tw-name-in");
+      finish(true);
+    }
+    window.addEventListener("beforeprint", onPrint);
 
     function onKey(e) {
       if (completed) return;
@@ -458,7 +570,7 @@
     // --- Begin: caret blinks alone under the name, then the writing starts --
     var first = lines[0];
     first.el.style.display = "";
-    positionCaret(first.nodes[0].node, 0, first.el);
+    positionCaret(first.nodes[0].node, 0, first);
     caret.classList.add("tw-blink");
     timer = setTimeout(function () {
       caret.classList.remove("tw-blink");

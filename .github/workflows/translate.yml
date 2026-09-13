@@ -28,13 +28,19 @@ permissions:
 
 jobs:
   translate:
+    # The bot pushes to main, so it must only ever run FROM main: a manual
+    # run dispatched on a feature branch would otherwise rebase that branch
+    # onto main and publish it.
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
         with:
-          node-version: "20"
+          fetch-depth: 0 # full history: the bot rebases before it pushes
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
 
       - name: Regenerate translations
         env:
@@ -48,7 +54,25 @@ jobs:
           git add ch/ gr/ lt/ hb/
           if git diff --cached --quiet; then
             echo "No translation changes to commit."
-          else
-            git commit -m "chore: auto-translate pages [skip actions]"
-            git push
+            exit 0
           fi
+          git commit -m "chore: auto-translate pages [skip actions]"
+          # main may have moved while the four translations ran: a push that
+          # does not touch index.html neither cancels nor re-triggers this
+          # job, and a plain push would then be rejected, leaving the live
+          # translations stale. Rebase onto origin/main and retry the push.
+          for attempt in 1 2 3; do
+            git fetch origin main
+            if ! git rebase origin/main; then
+              git rebase --abort
+              echo "::error::Rebase conflict on attempt $attempt — a translated folder was edited upstream by hand."
+              exit 1
+            fi
+            if git push origin HEAD:main; then
+              exit 0
+            fi
+            echo "Push rejected on attempt $attempt; retrying."
+            sleep 5
+          done
+          echo "::error::Could not push the translations after 3 attempts."
+          exit 1
