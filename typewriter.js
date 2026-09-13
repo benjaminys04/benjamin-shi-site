@@ -578,9 +578,28 @@
     }, T.openBlink);
   }
 
+  // Give the preloaded EB Garamond a beat to arrive (capped, so a slow
+  // connection never delays the intro past the boot guard's failsafe):
+  // the caret is measured from real glyph boxes, and a face swap mid-line
+  // would re-flow what has already been written.
+  function whenFontsSettled(cb) {
+    var done = false;
+    var go = function () { if (!done) { done = true; cb(); } };
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(go, go);
+      setTimeout(go, 700);
+    } else {
+      go();
+    }
+  }
+
+  function boot() {
+    whenFontsSettled(start);
+  }
+
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", start);
+    document.addEventListener("DOMContentLoaded", boot);
   } else {
-    start();
+    boot();
   }
 })();

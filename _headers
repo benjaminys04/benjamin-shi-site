@@ -1,0 +1,5 @@
+# Cloudflare Workers static-assets headers. The font files never change in
+# place (a re-export must get a new file name), so they can be cached for a
+# year; everything else keeps the platform defaults.
+/fonts/*
+  Cache-Control: public, max-age=31536000, immutable
