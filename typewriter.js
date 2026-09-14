@@ -4,7 +4,7 @@
  * A tiny boot guard inline in <head> hides the page before first paint
  * (html.tw-boot) unless the visitor prefers reduced motion or is a crawler.
  * This script snapshots every line of text, empties it, reveals the page —
- * name only — and types everything back in with a blinking block caret,
+ * name only — and types everything back in behind a thin blinking caret,
  * like the site is being written live. The chrome (star, theme switch,
  * language row) fades in at the end. Enter, Escape, or tapping the skip
  * hint finishes instantly.
@@ -25,7 +25,10 @@
   // --- Cadence (ms). Unhurried on purpose: the page should feel written. --
   var T = {
     openBlink: 1250,         // caret blinks alone under the name before typing
-    charMs: 22,              // base per-character delay, jittered below
+    charMs: 17,              // typical per-character delay (see charDelay)
+    charJitter: 0.22,        // log-normal spread around charMs — a typist's hand
+    minCharMs: 16,           // never two characters in one frame
+    wordPause: [25, 55],     // extra beat after a space: words, not a stream of letters
     cjkFactor: 2.4,          // CJK characters carry whole words — type slower
     punctPause: [120, 220],  // extra beat after . ; : ! ? …
     dashPause: [70, 130],    // smaller beat after — / ·
@@ -33,7 +36,10 @@
     hesitatePause: [100, 260],
     linePause: [200, 380],   // pause between lines
     sectionPause: 300,       // added on top before a new section starts
-    listRhythm: 0.82,        // the reading list speeds up once in rhythm
+    listRhythm: 0.06,        // the reading list gains this much pace per item…
+    listRhythmFloor: 0.68,   // …down to this fraction of the base cadence
+    gapBlinkMin: 300,        // line gaps at least this long show the idle blink
+    caretFade: 350,          // the caret's fade-out when the writing ends (ms)
     skipHintAfter: 1700,     // when the skip hint fades in
     endBlink: 1200,          // final blink before the caret leaves
     chromeStagger: 320,      // gap between star / toggle / language fade-ins
@@ -44,16 +50,28 @@
     return a + Math.random() * (b - a);
   }
 
+  // Standard normal (Box–Muller), for the log-normal keystroke spread.
+  function gauss() {
+    var u = 1 - Math.random();
+    var v = Math.random();
+    return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+  }
+
   // --- Styles (injected here so all five language pages share one file) ----
   var CSS = [
     // The caret is positioned geometrically from the last typed glyph, so
     // it lands on the true writing point even in RTL/bidi text.
-    // The caret is a var(--text) block. Theme changes are single-frame
-    // swaps (html.theme-snap freezes all transitions for the flip), so the
-    // caret changes color in the same frame as the page around it.
-    ".tw-caret{position:absolute;background:var(--text);pointer-events:none}",
-    ".tw-caret.tw-blink{animation:tw-blink 0.9s step-end infinite}",
-    "@keyframes tw-blink{0%,49%{opacity:1}50%,100%{opacity:0}}",
+    // The caret is a thin var(--text) bar — a writing caret, not a terminal
+    // block. Its blink is a soft fade, not a hard on/off. Theme changes are
+    // single-frame swaps (html.theme-snap freezes all transitions for the
+    // flip), so the caret changes color in the same frame as the page.
+    ".tw-caret{position:absolute;background:var(--text);pointer-events:none;transition:opacity 0.35s ease}",
+    ".tw-caret.tw-blink{animation:tw-blink 1s linear infinite}",
+    // The pause between lines is only 200–400 ms, so its blink starts
+    // mid-cycle: the caret dims a beat after the line ends and is back
+    // when the next one starts.
+    ".tw-caret.tw-pause{animation:tw-blink 0.8s linear infinite;animation-delay:-0.3s}",
+    "@keyframes tw-blink{0%,45%{opacity:1}55%,100%{opacity:0}}",
     // While typing, the motto's hover gloss stays put so the half-typed
     // Latin can't swap out from under the caret.
     "body.tw-typing .motto .latin{opacity:1 !important}",
@@ -282,9 +300,9 @@
       // direction and font.
       var el = line.scope;
       var fs = parseFloat(getComputedStyle(el).fontSize) || 20;
-      var w = fs * 0.5;
+      var w = Math.max(1.5, fs * 0.1);
       var h = fs * 1.05;
-      var gap = fs * 0.08;
+      var gap = fs * 0.05;
       var range = document.createRange();
       var rect;
       if (node && offset > 0) {
@@ -297,24 +315,17 @@
           rect = range.getBoundingClientRect();
           if (rect && (rect.width || rect.height)) {
             var rtl = runIsRTL(node.nodeValue, k, el);
-            var cw = w;
             var x = rtl ? rect.left - gap - w : rect.right + gap;
             var y = rect.top + (rect.height - h) / 2;
-            if (coversTypedText(x, y, cw, h, line, node, k)) {
-              // No room for the block beside this glyph: a thin bar at the
-              // same edge instead of painting over what is already written.
-              cw = Math.max(2, fs * 0.1);
-              x = rtl ? rect.left - gap - cw : rect.right + gap;
-              // Even the bar would cross the neighbouring run (a Latin name
-              // being written inside Hebrew text grows against the Hebrew
-              // that precedes it): the writing point is that boundary, so
-              // centre the bar on it — a pixel into each glyph's side
-              // bearing, over neither letter.
-              if (coversTypedText(x, y, cw, h, line, node, k)) {
-                x = (rtl ? rect.left : rect.right) - cw / 2;
-              }
+            if (coversTypedText(x, y, w, h, line, node, k)) {
+              // The slot beside this glyph belongs to the neighbouring bidi
+              // run (a Latin name being written inside Hebrew text grows
+              // against the Hebrew that precedes it): the writing point is
+              // that boundary, so centre the bar on it — a pixel into each
+              // glyph's side bearing, over neither letter.
+              x = (rtl ? rect.left : rect.right) - w / 2;
             }
-            moveCaret(x, y, cw, h);
+            moveCaret(x, y, w, h);
             return;
           }
         }
@@ -387,22 +398,31 @@
     var ci = 0;       // characters typed within that node
     var listDone = 0; // finished list items, for the rhythm speed-up
 
+    // The delay AFTER the character just typed. Intervals are log-normal
+    // around charMs — tightly clustered with a long tail, the way a real
+    // typist's are — never faster than one frame, with a beat after each
+    // word, a longer one after a clause, and the odd hesitation. (A flat
+    // ±60% jitter used to land a quarter of the keystrokes a single frame
+    // apart: flurries and stalls rather than a hand at work.)
     function charDelay(ch, speed) {
       var base = T.charMs;
-      if (isCJK && /[⺀-鿿　-ヿ豈-﫿]/.test(ch)) {
+      if (isCJK && /[⺀-鿿　-ヿ豈-﫿]/.test(ch)) {
         base *= T.cjkFactor;
       }
-      var d = base * rand(0.45, 1.65);
+      var d = base * Math.exp(gauss() * T.charJitter);
       if (/[.;:!?…。；：！？]/.test(ch)) d += rand(T.punctPause[0], T.punctPause[1]);
       else if (/[—–\/·、，]/.test(ch)) d += rand(T.dashPause[0], T.dashPause[1]);
+      else if (ch === " ") d += rand(T.wordPause[0], T.wordPause[1]);
       else if (Math.random() < T.hesitateChance) {
         d += rand(T.hesitatePause[0], T.hesitatePause[1]);
       }
-      return d * speed;
+      return Math.max(T.minCharMs, d * speed);
     }
 
+    // The reading list gathers pace item by item once the pattern is set.
     function lineSpeed(line) {
-      return line.listItem && listDone >= 2 ? T.listRhythm : 1;
+      if (!line.listItem) return 1;
+      return Math.max(T.listRhythmFloor, 1 - T.listRhythm * listDone);
     }
 
     function typeTick() {
@@ -423,6 +443,7 @@
 
     function startLine() {
       var line = lines[li];
+      caret.classList.remove("tw-blink", "tw-pause");
       line.el.style.display = "";
       ni = 0;
       ci = 0;
@@ -438,7 +459,9 @@
       if (li >= lines.length) return endSequence();
       var pause = rand(T.linePause[0], T.linePause[1]);
       if (lines[li].sectionStart) pause += T.sectionPause;
-      if (lines[li].listItem && listDone >= 2) pause *= T.listRhythm;
+      if (lines[li].listItem) pause *= lineSpeed(lines[li]);
+      // A longer gap reads as a moment's thought: let the caret blink there.
+      if (pause >= T.gapBlinkMin) caret.classList.add("tw-pause");
       timer = setTimeout(startLine, pause);
     }
 
@@ -499,7 +522,19 @@
     function cleanup() {
       if (cleaned) return;
       cleaned = true;
-      if (caret.parentNode) caret.parentNode.removeChild(caret);
+      if (caret.parentNode) {
+        // Fade out rather than vanish (the transition on .tw-caret). The
+        // blink animation owns opacity while it runs, so pin the current
+        // value first and flush styles, or the transition has no start.
+        var cur = getComputedStyle(caret).opacity;
+        caret.classList.remove("tw-blink", "tw-pause");
+        caret.style.opacity = cur;
+        void caret.offsetWidth;
+        caret.style.opacity = "0";
+        setTimeout(function () {
+          if (caret.parentNode) caret.parentNode.removeChild(caret);
+        }, T.caretFade);
+      }
       if (hint.parentNode) hint.parentNode.removeChild(hint);
       if (srClone.parentNode) srClone.parentNode.removeChild(srClone);
       for (var i = 0; i < lines.length; i++) exposeLine(lines[i]);
