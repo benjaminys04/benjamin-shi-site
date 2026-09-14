@@ -84,12 +84,17 @@
       unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
     }
     /* EB Garamond has no Hebrew. Frank Ruhl Libre (OFL), the classic Hebrew
-       book face, is mapped into the same family for the Hebrew range: its
-       stroke contrast and natural size sit level with the Garamond Latin,
-       where the system fallback ran sans-like and a size too large. Italic
-       Hebrew (the reading list on /hb/) is synthesised from this face. */
+       book face, carries the Hebrew range: its stroke contrast and natural
+       size sit level with the Garamond Latin, where the system fallback ran
+       sans-like and a size too large. It is a family of its own, second in
+       the stack, NOT a Hebrew segment of "EB Garamond": Chrome chooses the
+       face by style before it consults unicode-range, so a Hebrew segment
+       declared only as font-style: normal was skipped by every italic run
+       (the reading list, the motto gloss, the skip hint), which fell all
+       the way through to Lucida Grande. As its own family it serves upright
+       and italic Hebrew alike, the italic synthesised (verified 2026-09-14). */
     @font-face {
-      font-family: "EB Garamond";
+      font-family: "Frank Ruhl Libre";
       font-style: normal;
       font-weight: 400;
       font-display: swap;
@@ -124,7 +129,7 @@
        hover/color transition can lag the theme change. */
     html.theme-snap, html.theme-snap * { transition: none !important; }
     body {
-      font-family: "EB Garamond", Garamond, "Adobe Garamond Pro", Georgia, serif;
+      font-family: "EB Garamond", "Frank Ruhl Libre", Garamond, "Adobe Garamond Pro", Georgia, serif;
       max-width: 600px;
       margin: 80px auto;
       padding: 0 24px;
@@ -253,6 +258,23 @@
          wrap. (Dormant on every other language; only matches lang="el".) */
       [lang="el"] li { white-space: normal; }
     }
+
+    /* Touch screens only: bigger hit areas, identical layout. Vertical
+       padding on an inline link does not change its line box; horizontal
+       padding is offset by a negative margin; the toggle's padding is
+       offset the same way, and its gap widens just enough that the two
+       hit areas cannot overlap. The sun and moon were 20 and 12 px wide,
+       the language links 19 px tall — every control is now about 44 px
+       tall and as wide as its neighbour allows. Mouse users see nothing
+       new, so hover states keep their exact old footprint. */
+    @media (pointer: coarse) {
+      p a, .links a { padding-block: 0.35em; }
+      .lang-switch a { padding: 0.75em 0.3em; margin-inline: -0.3em; }
+      .theme-switch { gap: 0.9em; }
+      .theme-switch button { padding: 0.6em 0.4em; margin: -0.6em -0.4em; }
+      .theme-switch button:first-child { padding-inline-start: 0.9em; margin-inline-start: -0.9em; }
+      .theme-switch button:last-child { padding-inline-end: 0.9em; margin-inline-end: -0.9em; }
+    }
   </style>
 </head>
 <body>
@@ -283,13 +305,13 @@
       <li><em>סין</em> — edward rutherfurd</li>
       <li><em>שדים</em> — fyodor dostoevsky</li>
       <li><em>סופת הפלדה</em> — ernst jünger</li>
-      <li><em>מעללי הדנים</em> — saxo grammaticus</li>
+      <li><em>מעשי הדנים</em> — saxo grammaticus</li>
       <li><em>חלקים מן המערכה</em> — vannevar bush</li>
       <li><em>דרשות</em> — theodorus jacobus frelinghuysen</li>
-      <li><em>העולם למכירה</em> — javier blas ו-jack farchy</li>
-      <li><em>קונסטיטוציונליזם של הטוב המשותף</em> — adrian vermeule</li>
-      <li><em>טוקיו המתהווה</em> — joe mcreynolds ו-jorge almazán</li>
-      <li><em>אמנות העשייה של מדע והנדסה</em> — richard hamming</li>
+      <li><em>העולם למכירה</em> — javier blas ו־jack farchy</li>
+      <li><em>חוקתיות הטוב המשותף</em> — adrian vermeule</li>
+      <li><em>טוקיו המתהווה</em> — joe mcreynolds ו־jorge almazán</li>
+      <li><em>אמנות עשיית המדע וההנדסה</em> — richard hamming</li>
     </ul>
   </div>
 
