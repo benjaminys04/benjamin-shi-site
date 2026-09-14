@@ -74,6 +74,7 @@
     style.textContent = [
       ".fw-skip{position:fixed;inset-inline:0;bottom:14px;z-index:10000;display:block;margin:0 auto;appearance:none;-webkit-appearance:none;background:none;border:0;padding:6px 12px;text-align:center;font:inherit;font-style:italic;font-size:0.7em;color:#F7F7FF;opacity:0;transition:opacity 1s ease;pointer-events:none;cursor:pointer}",
       ".fw-skip.fw-in{opacity:0.9;pointer-events:auto}",
+      "@media (pointer: coarse){.fw-skip{padding:14px 12px}}",
       "@media print{.fw-sky,.fw-skip{display:none !important}}"
     ].join("\n");
     document.head.appendChild(style);

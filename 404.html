@@ -59,12 +59,17 @@
       unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
     }
     /* EB Garamond has no Hebrew. Frank Ruhl Libre (OFL), the classic Hebrew
-       book face, is mapped into the same family for the Hebrew range: its
-       stroke contrast and natural size sit level with the Garamond Latin,
-       where the system fallback ran sans-like and a size too large. Italic
-       Hebrew (the reading list on /hb/) is synthesised from this face. */
+       book face, carries the Hebrew range: its stroke contrast and natural
+       size sit level with the Garamond Latin, where the system fallback ran
+       sans-like and a size too large. It is a family of its own, second in
+       the stack, NOT a Hebrew segment of "EB Garamond": Chrome chooses the
+       face by style before it consults unicode-range, so a Hebrew segment
+       declared only as font-style: normal was skipped by every italic run
+       (the reading list, the motto gloss, the skip hint), which fell all
+       the way through to Lucida Grande. As its own family it serves upright
+       and italic Hebrew alike, the italic synthesised (verified 2026-09-14). */
     @font-face {
-      font-family: "EB Garamond";
+      font-family: "Frank Ruhl Libre";
       font-style: normal;
       font-weight: 400;
       font-display: swap;
@@ -79,7 +84,7 @@
     }
     html { background: var(--bg); }
     body {
-      font-family: "EB Garamond", Garamond, "Adobe Garamond Pro", Georgia, serif;
+      font-family: "EB Garamond", "Frank Ruhl Libre", Garamond, "Adobe Garamond Pro", Georgia, serif;
       max-width: 600px;
       margin: 80px auto;
       padding: 0 24px;
@@ -104,6 +109,11 @@
     @media (max-width: 600px) {
       body { margin: 32px auto; font-size: 18px; }
       h1 { font-size: 1.8em; }
+    }
+    /* Touch screens: taller hit areas, same layout (see index.html). */
+    @media (pointer: coarse) {
+      p a { padding-block: 0.35em; }
+      .lang-switch a { padding: 0.75em 0.3em; margin-inline: -0.3em; }
     }
   </style>
 </head>

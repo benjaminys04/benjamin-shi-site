@@ -89,6 +89,9 @@
     // against the light canvas, and it is the only visible way to skip.
     ".tw-skip.tw-in{opacity:1;pointer-events:auto}",
     ".tw-skip:hover{color:var(--text)}",
+    // On touch screens the hint is the only visible way out, so it gets a
+    // thumb-sized hit area (about 44 px tall); it is fixed, so nothing moves.
+    "@media (pointer: coarse){.tw-skip{padding:14px 12px}}",
     // Offscreen copy of the full text, readable by screen readers while the
     // visible lines are mid-animation.
     ".tw-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}",
