@@ -74,8 +74,9 @@
     "@keyframes tw-blink{0%,45%{opacity:1}55%,100%{opacity:0}}",
     // While typing, the motto's hover gloss stays put so the half-typed
     // Latin can't swap out from under the caret.
-    "body.tw-typing .motto .latin{opacity:1 !important}",
-    "body.tw-typing .motto .english{opacity:0 !important}",
+    // (Color, not opacity, like the page's own crossfade: no GPU layers.)
+    "body.tw-typing .motto .latin{color:var(--text) !important}",
+    "body.tw-typing .motto .english{color:transparent !important}",
     // The transition lives on the -in class only. On the base class it would
     // ANIMATE the initial hide: on a real network the browser computes styles
     // before this script arrives, so opacity 1 -> 0 would fade over 0.6s and
@@ -114,7 +115,6 @@
   var LTR_CHAR = /[A-Za-zÀ-ɏͰ-ϿЀ-ӿḀ-῿⺀-鿿぀-ヿ豈-﫿]/;
 
   function start() {
-    clearTimeout(window.__twReveal);
 
     var body = document.body;
     var style = document.createElement("style");
@@ -617,22 +617,35 @@
   }
 
   // Give the preloaded EB Garamond a beat to arrive (capped, so a slow
-  // connection never delays the intro past the boot guard's failsafe):
-  // the caret is measured from real glyph boxes, and a face swap mid-line
-  // would re-flow what has already been written.
+  // connection still gets its page): the caret is measured from real glyph
+  // boxes, and a face swap mid-line would re-flow what has already been
+  // written.
   function whenFontsSettled(cb) {
     var done = false;
     var go = function () { if (!done) { done = true; cb(); } };
     if (document.fonts && document.fonts.ready) {
       document.fonts.ready.then(go, go);
-      setTimeout(go, 700);
+      setTimeout(go, 1200);
     } else {
       go();
     }
   }
 
+  // The script has arrived, so the head's failsafe (there for a script that
+  // never loads) is retired now, not when typing starts: firing during the
+  // font wait it revealed the whole page, which start() then blanked and
+  // retyped — a flash on slow first visits. If anything throws, the page is
+  // revealed as it ships rather than left hidden.
   function boot() {
-    whenFontsSettled(start);
+    clearTimeout(window.__twReveal);
+    whenFontsSettled(function () {
+      try {
+        start();
+      } catch (e) {
+        root.classList.remove("tw-boot");
+        throw e;
+      }
+    });
   }
 
   if (document.readyState === "loading") {
