@@ -124,6 +124,9 @@
        the column, and the text can never disagree mid-fade. */
     html {
       background: var(--bg);
+      /* No gray/blue tap rectangle on phones: every control already shows
+         its own state change (hover color, the motto's gloss). */
+      -webkit-tap-highlight-color: transparent;
     }
     /* setTheme() holds this class for the swap frame so no element's
        hover/color transition can lag the theme change. */
@@ -150,7 +153,13 @@
     /* The Latin and its gloss share one grid cell, so the box is sized by
        the longer of the two and both may wrap: an absolutely positioned,
        non-wrapping gloss overflowed narrow phones (the Greek one clipped).
-       The gloss shows on hover, on touch, and on keyboard focus. */
+       The gloss shows on hover, on touch, and on keyboard focus.
+       The crossfade animates the text COLOR, never opacity: an opacity
+       transition lifts each span onto its own GPU layer, and a layer that
+       is not yet rasterised (a cold first visit, a busy GPU) can show as a
+       dark rectangle for a frame. A color change is a plain repaint.
+       The motto never draws a box of any kind: no focus outline (the gloss
+       itself is the focus cue), no tap highlight, no selection block. */
     .motto {
       display: inline-grid;
       max-width: 100%;
@@ -158,31 +167,32 @@
       cursor: default;
       margin: 0 0 0.2em 0;
       line-height: 1.2;
+      outline: none;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-user-select: none;
+      user-select: none;
     }
     .motto .latin,
     .motto .english {
       grid-area: 1 / 1;
       min-width: 0;
-      transition: opacity 0.4s ease;
+      color: var(--text);
+      transition: color 0.4s ease;
     }
     .motto .latin {
       direction: ltr;
       unicode-bidi: isolate;
     }
     .motto .english {
-      opacity: 0;
+      color: transparent;
     }
     .motto:hover .latin,
     .motto:focus-visible .latin {
-      opacity: 0;
+      color: transparent;
     }
     .motto:hover .english,
     .motto:focus-visible .english {
-      opacity: 1;
-    }
-    .motto:focus-visible {
-      outline: 1px solid var(--hover);
-      outline-offset: 4px;
+      color: var(--text);
     }
     .links { margin: 0 0 0.8em 0; }
     .section { margin-top: 1.2em; }
@@ -288,7 +298,7 @@
 
   <p class="motto" tabindex="0">
     <span class="latin" lang="la">laudem non quaero; culpam non timeo</span>
-    <span class="english">我不求赞誉，我不惧非难</span>
+    <span class="english">我不求赞誉，也不惧责难</span>
   </p>
 
   <p>我热爱 <a href="https://en.wikipedia.org/wiki/Garamond">garamond</a>。我也做<a href="https://parakletos.vc/">投资</a>。</p>
@@ -305,13 +315,13 @@
       <li><em>中国</em> — edward rutherfurd</li>
       <li><em>群魔</em> — fyodor dostoevsky</li>
       <li><em>钢铁风暴</em> — ernst jünger</li>
-      <li><em>丹麦人的业绩</em> — saxo grammaticus</li>
+      <li><em>丹麦人的事迹</em> — saxo grammaticus</li>
       <li><em>行动的片段</em> — vannevar bush</li>
       <li><em>布道集</em> — theodorus jacobus frelinghuysen</li>
       <li><em>待售的世界</em> — javier blas 和 jack farchy</li>
-      <li><em>共同善宪政主义</em> — adrian vermeule</li>
+      <li><em>共善宪政主义</em> — adrian vermeule</li>
       <li><em>涌现的东京</em> — joe mcreynolds 和 jorge almazán</li>
-      <li><em>科学与工程之道</em> — richard hamming</li>
+      <li><em>科学与工程的艺术</em> — richard hamming</li>
     </ul>
   </div>
 
