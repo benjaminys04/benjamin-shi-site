@@ -9,9 +9,9 @@
   <!-- The ICO is declared with a real size, not sizes="any": with "any"
        Chrome prefers the ICO and never loads the SVG, whose media query is
        what turns the star light on dark tab bars. ICO before SVG on purpose. -->
-  <link rel="icon" href="/favicon.ico?v=4" sizes="32x32">
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=4">
-  <link rel="apple-touch-icon" href="/favicon-180.png?v=4">
+  <link rel="icon" href="/favicon.ico?v=5" sizes="32x32">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=5">
+  <link rel="apple-touch-icon" href="/favicon-180.png?v=5">
   <!-- EB Garamond, self-hosted (Fontsource build of the OFL family), split
        by script so a page only fetches what it sets: Latin regular, italic
        and the medium the name is set in; Greek regular and italic for /gr/;
@@ -186,12 +186,17 @@
     .motto .english {
       color: transparent;
     }
+    /* Keyboard focus shows the gloss only when Tab brought it there
+       (.tab-focus, set by the script at the end of the page). Not
+       :focus-visible: Chrome turns a clicked motto focus-visible at the
+       next key press (Enter to skip the intro), and the gloss then stayed
+       up after the mouse left. */
     .motto:hover .latin,
-    .motto:focus-visible .latin {
+    .motto.tab-focus .latin {
       color: transparent;
     }
     .motto:hover .english,
-    .motto:focus-visible .english {
+    .motto.tab-focus .english {
       color: var(--text);
     }
     .links { margin: 0 0 0.8em 0; }
@@ -313,14 +318,14 @@
     <p>διαβάζω αυτή τη στιγμή:</p>
     <ul>
       <li><em>κίνα</em> — edward rutherfurd</li>
-      <li><em>οι δαιμονισμένοι</em> — fyodor dostoevsky</li>
+      <li><em>δαιμονισμένοι</em> — fyodor dostoevsky</li>
       <li><em>η θύελλα του ατσαλιού</em> — ernst jünger</li>
       <li><em>gesta danorum</em> — saxo grammaticus</li>
       <li><em>κομμάτια της δράσης</em> — vannevar bush</li>
       <li><em>κηρύγματα</em> — theodorus jacobus frelinghuysen</li>
       <li><em>ο κόσμος προς πώληση</em> — javier blas και jack farchy</li>
       <li><em>συνταγματισμός του κοινού καλού</em> — adrian vermeule</li>
-      <li><em>το αναδυόμενο τόκιο</em> — joe mcreynolds και jorge almazán</li>
+      <li><em>αναδυόμενο τόκιο</em> — joe mcreynolds και jorge almazán</li>
       <li><em>η τέχνη της επιστήμης και της μηχανικής</em> — richard hamming</li>
     </ul>
   </div>
@@ -359,6 +364,18 @@
       for (var i = 0; i < links.length; i++) {
         if (links[i].getAttribute('data-path') === p) links[i].classList.add('active');
       }
+    })();
+    // The motto shows its gloss on keyboard focus only when Tab (or
+    // Shift+Tab) moved focus onto it; a click, or a key pressed while a
+    // clicked motto still holds focus, never pins it.
+    (function () {
+      var motto = document.querySelector('.motto');
+      if (!motto) return;
+      var viaTab = false;
+      document.addEventListener('keydown', function (e) { viaTab = e.key === 'Tab'; }, true);
+      document.addEventListener('pointerdown', function () { viaTab = false; }, true);
+      motto.addEventListener('focus', function () { motto.classList.toggle('tab-focus', viaTab); });
+      motto.addEventListener('blur', function () { motto.classList.remove('tab-focus'); });
     })();
   </script>
 

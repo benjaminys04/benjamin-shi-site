@@ -9,9 +9,9 @@
   <!-- The ICO is declared with a real size, not sizes="any": with "any"
        Chrome prefers the ICO and never loads the SVG, whose media query is
        what turns the star light on dark tab bars. ICO before SVG on purpose. -->
-  <link rel="icon" href="/favicon.ico?v=4" sizes="32x32">
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=4">
-  <link rel="apple-touch-icon" href="/favicon-180.png?v=4">
+  <link rel="icon" href="/favicon.ico?v=5" sizes="32x32">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=5">
+  <link rel="apple-touch-icon" href="/favicon-180.png?v=5">
   <!-- EB Garamond, self-hosted (Fontsource build of the OFL family), split
        by script so a page only fetches what it sets: Latin regular, italic
        and the medium the name is set in; Greek regular and italic for /gr/;
@@ -186,12 +186,17 @@
     .motto .english {
       color: transparent;
     }
+    /* Keyboard focus shows the gloss only when Tab brought it there
+       (.tab-focus, set by the script at the end of the page). Not
+       :focus-visible: Chrome turns a clicked motto focus-visible at the
+       next key press (Enter to skip the intro), and the gloss then stayed
+       up after the mouse left. */
     .motto:hover .latin,
-    .motto:focus-visible .latin {
+    .motto.tab-focus .latin {
       color: transparent;
     }
     .motto:hover .english,
-    .motto:focus-visible .english {
+    .motto.tab-focus .english {
       color: var(--text);
     }
     .links { margin: 0 0 0.8em 0; }
@@ -289,9 +294,9 @@
 </head>
 <body>
   <div class="header-row">
-    <h1>Benjamin Shi <a href="https://www.youtube.com/watch?v=0bh-4Zn5we0&t=0" class="secret" aria-label="munusculum inopinatum">✹</a></h1>
+    <h1>Benjamin Shi <a href="https://www.youtube.com/watch?v=0bh-4Zn5we0&t=0" class="secret" aria-label="parvum inopinatum">✹</a></h1>
     <div class="theme-switch">
-      <button id="light-btn" class="active" onclick="setTheme('light')" aria-pressed="true" aria-label="Species clara">☀&#xFE0E;</button>
+      <button id="light-btn" class="active" onclick="setTheme('light')" aria-pressed="true" aria-label="Species lucida">☀&#xFE0E;</button>
       <button id="dark-btn" onclick="setTheme('dark')" aria-pressed="false" aria-label="Species obscura">☾&#xFE0E;</button>
     </div>
   </div>
@@ -310,17 +315,17 @@
   </div>
 
   <div class="section">
-    <p>haec nunc lego:</p>
+    <p>nunc lego:</p>
     <ul>
       <li><em>sina</em> — edward rutherfurd</li>
       <li><em>daemones</em> — fyodor dostoevsky</li>
-      <li><em>tempestas chalybis</em> — ernst jünger</li>
+      <li><em>tempestas ferri</em> — ernst jünger</li>
       <li><em>gesta danorum</em> — saxo grammaticus</li>
-      <li><em>partes actionis</em> — vannevar bush</li>
+      <li><em>fragmenta actionis</em> — vannevar bush</li>
       <li><em>sermones</em> — theodorus jacobus frelinghuysen</li>
-      <li><em>orbis venalis</em> — javier blas et jack farchy</li>
+      <li><em>mundus venalis</em> — javier blas et jack farchy</li>
       <li><em>constitutionalismus boni communis</em> — adrian vermeule</li>
-      <li><em>tokyo emergens</em> — joe mcreynolds et jorge almazán</li>
+      <li><em>tokium enascens</em> — joe mcreynolds et jorge almazán</li>
       <li><em>ars scientiae et machinationis exercendae</em> — richard hamming</li>
     </ul>
   </div>
@@ -359,6 +364,18 @@
       for (var i = 0; i < links.length; i++) {
         if (links[i].getAttribute('data-path') === p) links[i].classList.add('active');
       }
+    })();
+    // The motto shows its gloss on keyboard focus only when Tab (or
+    // Shift+Tab) moved focus onto it; a click, or a key pressed while a
+    // clicked motto still holds focus, never pins it.
+    (function () {
+      var motto = document.querySelector('.motto');
+      if (!motto) return;
+      var viaTab = false;
+      document.addEventListener('keydown', function (e) { viaTab = e.key === 'Tab'; }, true);
+      document.addEventListener('pointerdown', function () { viaTab = false; }, true);
+      motto.addEventListener('focus', function () { motto.classList.toggle('tab-focus', viaTab); });
+      motto.addEventListener('blur', function () { motto.classList.remove('tab-focus'); });
     })();
   </script>
 
